@@ -7,18 +7,32 @@ const gradeValue = document.getElementById('grade');
 const dniValue = document.getElementById('DNI');
 const bornDateValue = document.getElementById('bornDate');
 
-function GetAllStudents() {
-    fetch(`${urlBase}GetAllStudents`)
+async function GetAllStudents() {
+    await fetch(`${urlBase}GetAllStudents`)
         .then(response => response.json())
-        .then(json => Fill(json));
+        .then(json => {
+            if (json.length > 0) Fill(json)
+            else {
+                var eLt = document.getElementById('emptyListText');
+                eLt.innerHTML = "Empty List!";
+                eLt.style.marginTop = "50px";
+                eLt.style.color = "lightgray";
+                eLt.style.boxShadow = "0px 0px 20px #ffc107";
+                eLt.style.borderRadius = "10px";
+                eLt.style.padding = "10px";
+                eLt.style.backgroundColor = "rgb(78, 78, 78)";
+            }
+        });
 }
-function GetStudentById(id) {
-    fetch(`${urlBase}GetStudentById/${id}`)
-        .then(response => response.json())
-        .then(json => FillById(json));
+async function GetStudentById(id) {
+    if (id != null) {
+        await fetch(`${urlBase}GetStudentById/${id}`)
+            .then(response => response.json())
+            .then(json => FillById(json));
+    }
 }
-function InsertStudent() {
-    fetch(`${urlBase}InsertStudent`, {
+async function InsertStudent() {
+    var response = await fetch(`${urlBase}InsertStudent`, {
         method: "POST",
         headers: {
             "Content-type": "application/json"
@@ -31,11 +45,14 @@ function InsertStudent() {
             dni: parseInt(dniValue.value),
             bornDate: bornDateValue.value
         })
-    }).then(response => response.json())
-    alert("Student Created");
+    });
+    if (response.ok) {
+        alert("Student created");
+        window.location.href = '/';
+    }
 }
-function UpdateStudents() {
-    fetch(`${urlBase}UpdateStudent/${idInput.value}`, {
+async function UpdateStudents() {
+    var response = await fetch(`${urlBase}UpdateStudent/${idInput.value}`, {
         method: "PUT",
         headers: {
             "Content-type": "application/json"
@@ -49,16 +66,21 @@ function UpdateStudents() {
             dni: parseInt(dniValue.value),
             bornDate: bornDateValue.value
         })
-    }).then(response => response.json())
-        .then(json => console.log(json));
-    alert("Student Updated");
+    });
+    if (response.ok) {
+        alert("Student updated");
+        window.location.href = '/';
+    }
 }
-function DeleteStudent(id) {
-    fetch(`${urlBase}DeleteStudent/${id}`, {
+async function DeleteStudent(id) {
+    var response = await fetch(`${urlBase}DeleteStudent/${id}`, {
         method: "DELETE"
     });
-    alert("Student Deleted");
-    window.location.reload();    
+    if (response.ok) {
+        alert("Student Deleted");
+        window.location.reload();
+    }
+    else alert("Bad request");
 }
 
 //RENDER METHODS
@@ -76,9 +98,9 @@ function Fill(response) {
             <td> ${item.dni}</td>
             <td> ${item.bornDate}</td>
             <td class="buttons">    
-            <a class="btn btn-primary" onClick="GetStudentById(${item.studentId})">Details</a>
-            <a href="editStudent.html" class="btn btn-warning">Edit</a>
-            <a class="btn btn-danger" onClick="DeleteStudent(${item.studentId})">Delete</a>
+            <a class="btn btn-primary" onClick="GetStudentById(${item.studentId})" tabindex=1>Details</a>
+            <a href="editStudent.html" class="btn btn-warning" tabindex=2>Edit</a>
+            <a class="btn btn-danger" onClick="DeleteStudent(${item.studentId})" tabindex=3>Delete</a>
             </td>
         </tr>
         `;
